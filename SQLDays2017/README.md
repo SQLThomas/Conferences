@@ -1,3 +1,3 @@
 # SQL Days Erding 2017
 
-Hier findet Ihr die R-Scripts zu meinen Präsentationen.
+Hier findet Ihr die Folien und R-Scripts zu meinen Präsentationen.
