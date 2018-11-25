@@ -1,4 +1,4 @@
-Thank you again for attending my session. 
+Thank you again for attending my session.
 To replay what I demoed with my script, you need to prepare the following:
 
 * A database named Spatial1 
