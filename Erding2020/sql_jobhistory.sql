@@ -42,8 +42,8 @@ EXEC sp_configure 'external scripts enabled', 1;
 RECONFIGURE WITH OVERRIDE;
 
 EXEC sp_execute_external_script   
-@language =N'R', 
-@script=N' 
+@language = N'R', 
+@script= N' 
 OutputDataSet <- InputDataSet', 
 @input_data_1 =N'SELECT 1 AS hello' 
 WITH RESULT SETS (([hello] int not null)); 
@@ -59,7 +59,6 @@ DECLARE @input_query NVARCHAR(MAX) = N'SELECT sj.name, sh.run_status,
   order by upper(sj.name), sh.run_date, sh.run_time;'
 
 DECLARE @r_script NVARCHAR(MAX) = N' 
-# library(tidyverse)
 # library(DBI)
 library(dplyr)
 library(lubridate)
@@ -81,8 +80,8 @@ dev.off()
 out <- data.frame(''_JobHistory.png'')
 '
 EXEC sp_execute_external_script   
-@language =N'R', 
-@script=@r_script,
+@language = N'R', 
+@script = @r_script,
 @input_data_1 = @input_query,
 @input_data_1_name = N'jobhist',
 @output_data_1_name = N'out'
