@@ -33,7 +33,6 @@ browseURL('http://www.imf.org/external/pubs/ft/weo/2019/02/weodata/groups.htm')
 weo <- read_tsv('http://www.imf.org/external/pubs/ft/weo/2019/02/weodata/WEOOct2019all.xls', na = c('n/a', '--'))
 weo.all <- head(weo, -1)
 weo <- read_tsv('http://www.imf.org/external/pubs/ft/weo/2019/02/weodata/WEOOct2019alla.xls', na = c('n/a', '--'))
-# weo <- read_tsv('data/WEOApr2017alla.xls', na = c('n/a', '--'))
 weo.gr <- head(weo, -1)
 weo.gr
 
