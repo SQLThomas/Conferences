@@ -10,7 +10,7 @@ library(tidyr)
 library(ggplot2)
 
 # Code block is executed once ---------------------------------------------
-weo <- read_tsv('http://www.imf.org/external/pubs/ft/weo/2019/02/weodata/WEOOct2019alla.xls', na = c('n/a', '--'))
+weo <- read_tsv('https://www.imf.org/external/pubs/ft/weo/2019/02/weodata/WEOOct2019alla.xls', na = c('n/a', '--'))
 # weo <- read_tsv('data/WEOOct2019alla.xls', na = c('n/a', '--'))
 weo <- head(weo, -1)
 weo <- select(weo, 2:4, num_range('', 2000:2022))
