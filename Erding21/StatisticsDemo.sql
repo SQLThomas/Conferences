@@ -72,7 +72,7 @@ WHERE (ProductID = 746);
 DBCC SHOW_STATISTICS ([Sales.SalesOrderDetail], [IX_SalesOrderDetail_ProductID]);
 
 
--- Recompilation threshold / ipping point(s)
+-- Recompilation threshold / tipping point(s)
 
 DBCC FREEPROCCACHE;
 INSERT INTO [Sales].[SalesOrderDetail]
@@ -109,6 +109,7 @@ DBCC SHOW_STATISTICS ([Sales.SalesOrderDetail], [IX_SalesOrderDetail_ProductID])
 
 -- Manual stats update / sample rate
 
+DBCC FREEPROCCACHE;
 UPDATE STATISTICS Sales.SalesOrderDetail [IX_SalesOrderDetail_ProductID] 
 	WITH FULLSCAN, PERSIST_SAMPLE_PERCENT = ON;
 
