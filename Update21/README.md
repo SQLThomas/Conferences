@@ -1,4 +1,4 @@
-# Update Conference Praha 2021
+# Update Conference 2021 Prague
 
 Here you go: slides and scripts for my talk "So, what about JSON in my database?"
 
