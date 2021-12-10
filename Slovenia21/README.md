@@ -2,4 +2,4 @@
 
 Here you go: slides and scripts for my talk "A journey through the TidyveRse"
 
-(Please note: the sales.csv file used for the speed comparison is missing, as it was too big to upload to GitHub...)
+(Please note: data files are missing for copyright reasons; one even was too big to upload to GitHub...)
