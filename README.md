@@ -1,2 +1,2 @@
 # Conferences
-Slides and scripts from my most recent speaking gigs
+Here you find slides and scripts from my most recent speaking gigs
