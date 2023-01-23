@@ -406,7 +406,7 @@ ggplot(imf, aes(x = GenGovRevenue, y = Unemployment, size = Unemployment, countr
   scale_country() +
   scale_size(range = c(2, 12)) + guides(size = 'none') +
   labs(title = 'Year: {closest_state}', x = 'GenGovRevenue', y = 'Unemployment') +
-  transition_states(Year, transition_length = 3, state_length = 1, wrap = FALSE)
+  transition_states(Year, transition_length = 3, state_length = 1, wrap = FALSE) +
   ease_aes('linear')
 
 # Chernoff faces ----------------------------------------------------------
