@@ -360,7 +360,7 @@ colnames(pls) <- fnames
 pls
 zeit <- as.POSIXct(pls[1, ]$Stand_von / 1000, origin="1970-01-01")
 
-map.kn <- suppressMessages(qmap("Konstanz-Altstadt", zoom=14, source = "google", maptype="roadmap"))
+map.kn <- suppressMessages(qmap("Konstanz-Altstadt", zoom=13, source = "google", maptype="roadmap"))
 # load('Data/konstanzmap.Rdata')
 map.kn + 
   geom_point(data = pls, aes(x = x, y = y, size = frei, color = Status)) +
