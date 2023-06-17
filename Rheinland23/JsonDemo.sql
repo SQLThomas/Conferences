@@ -1,3 +1,5 @@
+SELECT @@VERSION;
+
 USE JsonDemo;
 
 -- Constructing JSON from relational table data
