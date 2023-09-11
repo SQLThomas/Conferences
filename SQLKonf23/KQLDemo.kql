@@ -1,0 +1,296 @@
+﻿// ©2023 Thomas Hütter, this script is provided as-is for demo and educational use only,
+// without warranty of any kind for any other purposes, so run at your own risk!
+
+// [DemoCluster/Hanau2023]
+
+// Management commands
+
+.show diagnostics;
+
+.show database schema;
+
+.show table Territory schema as json;
+
+.show table Territory details;
+
+// SQL examples translated
+
+// Limited support for direct use of T-SQL
+
+--
+SELECT TOP 10 *
+FROM SalesHeader;
+
+// Translate T-SQl to KQL (with limited success)
+
+explain
+SELECT TOP 10 *
+FROM SalesHeader;
+
+SalesHeader
+| project SalesOrderID, RevisionNumber, OrderDate, DueDate, ShipDate, Status, OnlineOrderFlag, SalesOrderNumber, PurchaseOrderNumber, AccountNumber, CustomerID, SalesPersonID, TerritoryID, BillToAddressID, ShipToAddressID, ShipMethodID, CreditCardID, CreditCardApprovalCode, CurrencyRateID, SubTotal, TaxAmt, Freight, TotalDue, Comment, rowguid, ModifiedDate
+| take int(10)
+
+// 'Real' KQL
+
+SalesHeader
+| take 10;
+
+SalesHeader
+| project SalesOrderNumber, CustomerID, TerritoryID, TotalDue
+| take 10;
+
+explain
+SELECT TOP 10 Head.SalesOrderNumber, Cust.CustomerID, Pers.FirstName, COALESCE(Pers.MiddleName, '') AS MiddleName, Pers.LastName, Head.TotalDue
+FROM [SalesHeader] Head
+JOIN [Customer] Cust ON Cust.CustomerID = Head.CustomerID
+JOIN [Person] Pers ON Pers.BusinessEntityID = Cust.PersonID;
+
+SalesHeader
+| join kind=inner 
+(Customer
+| project-rename ['Cust.AccountNumber']=AccountNumber, ['Cust.CustomerID']=CustomerID, ['Cust.TerritoryID']=TerritoryID, ['Cust.rowguid']=rowguid, ['Cust.ModifiedDate']=ModifiedDate) on (['$left'].CustomerID == ['$right'].['Cust.CustomerID'])
+| join kind=inner 
+(Person
+| project-rename ['Pers.MiddleName']=MiddleName, ['Pers.rowguid']=rowguid, ['Pers.ModifiedDate']=ModifiedDate) on (['$left'].PersonID == ['$right'].BusinessEntityID)
+| project SalesOrderNumber, ['Cust.CustomerID'], FirstName, MiddleName=iff(notnull(['Pers.MiddleName']), ['Pers.MiddleName'], iff(notnull(""), "", string(null))), LastName, TotalDue
+| take int(10)
+| project-rename CustomerID=['Cust.CustomerID']
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| project SalesOrderNumber, CustomerID, FirstName, MiddleName, LastName, TotalDue
+| take 10;
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| project SalesOrderNumber, CustomerID, FirstName, MiddleName, LastName, Country=CountryRegionCode, Territory=Name, TotalDue
+| where Country == 'DE';
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| join kind=inner ShipmentMethod on $left.ShipMethodID == $right.ShipMethodID
+| summarize OrderCount = count(), TotalWorth = sum(TotalDue) by Country=CountryRegionCode, Territory=Name, ShipBy=Name1;
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| join kind=inner ShipmentMethod on $left.ShipMethodID == $right.ShipMethodID
+| summarize OrderCount = count(), TotalWorth = sum(TotalDue) by Country=CountryRegionCode, Territory=Name, ShipBy=Name1
+| where OrderCount > 500;
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| join kind=inner ShipmentMethod on $left.ShipMethodID == $right.ShipMethodID
+| summarize OrderCount = count(), TotalWorth = sum(TotalDue) by Country=CountryRegionCode, Territory=Name, ShipBy=Name1
+| where OrderCount > 500
+| order by OrderCount;
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| join kind=inner ShipmentMethod on $left.ShipMethodID == $right.ShipMethodID
+| summarize OrderCount = count(), TotalWorth = sum(TotalDue) by Country=CountryRegionCode, Territory=Name, ShipBy=Name1
+| where OrderCount > 500
+| top 3 by OrderCount;
+
+
+// [help cluster/Samples]
+
+.show table StormEvents details;
+
+// Exact match == vs case-insensitive match =~
+
+StormEvents
+| distinct EventType
+| order by EventType asc
+
+StormEvents
+| where EventType == "Flood"
+| sort by DamageProperty desc
+| take 10;
+
+StormEvents
+| where EventType == "flood"
+| sort by DamageProperty desc
+| take 10;
+
+StormEvents
+| where EventType =~ "flood"
+| sort by DamageProperty desc
+| take 10;
+
+// Match on substring with 'contains' or specific word with 'has' (both default to case-insensitive!)
+
+StormEvents
+| where EpisodeNarrative contains "flood"
+| count;
+
+StormEvents
+| where EpisodeNarrative has "flood"
+| count;
+
+StormEvents
+| where EpisodeNarrative contains "flood"
+| project EpisodeNarrative
+| take 5;
+
+StormEvents
+| where EpisodeNarrative has "flood"
+| project EpisodeNarrative
+| take 5;
+
+// One command to 'search' on all columns in a table
+
+StormEvents
+| search "flood"
+| count;
+
+StormEvents
+| search "*flood*"
+| count;
+
+// 'let' statements
+
+let n = 10;  // number
+let place = "VIRGINIA";  // string
+let cutoff = ago(12345d); // datetime 
+StormEvents 
+| where StartTime > cutoff and State == place 
+| take n;
+
+let place = 'GUAM';
+let GuamStorms = StormEvents
+| where State == place;
+GuamStorms;
+
+// 'range' generates a table with a series of values
+
+let Range10 = view () { range aColumn from 1 to 10 step 1 };
+Range10;
+
+let factor = 5;
+let Multiply = (val1:long, val2:long) { val1 * val2 };
+range x from 1 to 10 step 1 
+| extend result = Multiply(x, factor);
+
+
+// [DemoCluster/Hanau2023]
+
+// Visualizations
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| join kind=inner ShipmentMethod on $left.ShipMethodID == $right.ShipMethodID
+| extend Territory = strcat(CountryRegionCode, '-', Name)
+| summarize OrderCount = count(), TotalWorth = toint(sum(TotalDue)) by Territory, ShipBy=Name1
+| order by Territory asc, ShipBy
+
+| render columnchart with ( kind=stacked , ycolumns=OrderCount,TotalWorth, ysplit=panels, series=ShipBy, title='Sales by Freight carrier' );
+
+SalesHeader
+| summarize TotalSales = toint(sum(TotalDue)) by CustomerID
+| top 10 by TotalSales
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| order by TotalSales
+| project Rank = row_number(), Customer = strcat(LastName, ', ', FirstName), TotalSales
+| render table with ( title='All time sales heroes' );
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| summarize TotalOrders = count() by Territory=CountryRegionCode
+| order by TotalOrders
+| render piechart with ( title='Sales by country' )
+
+SalesHeader
+| join kind=inner Customer on $left.CustomerID == $right.CustomerID
+| join kind=inner Person on $left.PersonID == $right.BusinessEntityID
+| join kind=inner Territory on $left.TerritoryID == $right.TerritoryID
+| extend Territory = strcat(CountryRegionCode, '-', Name), OrderMonth = startofmonth(OrderDate)
+| summarize OrderCount = count(), TotalWorth = toint(sum(TotalDue)) by OrderMonth, Territory
+| order by OrderMonth asc, Territory asc 
+| render linechart with ( ycolumns=OrderCount, ytitle='Orders/month', series=Territory, title='Global Sales History' );
+
+.show database Hanau2023 principals
+
+// [help cluster/Samples]
+
+StormEvents
+| where State == 'CALIFORNIA'
+| summarize DirectInjuries=sum(InjuriesDirect)
+| render card with (title="Number of injuries caused directly by storms");
+
+StormEvents
+| where State == 'CALIFORNIA'
+| summarize _count = count() by EventType
+| order by _count desc
+| render barchart ;
+
+StormEvents
+| where State == 'CALIFORNIA'
+| where isnotempty( BeginLat ) and isnotempty( BeginLon )
+| project BeginLon, BeginLat, EventType
+| render scatterchart with (kind = map);
+
+// Time series analysis
+
+.show table Trips details;
+
+Trips
+| take 10
+
+Trips
+| distinct cab_type
+
+let min_t = datetime(2009-01-01);
+let max_t = datetime(2019-01-01);
+Trips
+| make-series numTrips=count() default=0 on pickup_datetime from min_t to max_t step 1d by cab_type
+| render timechart;
+
+let min_t = datetime(2015-01-01);
+let max_t = datetime(2016-01-01);
+Trips
+| make-series numTrips=count() default=0 on pickup_datetime from min_t to max_t step 1d by cab_type
+| render timechart;
+
+let min_t = datetime(2015-01-01);
+let max_t = datetime(2016-01-01);
+Trips
+| make-series numTrips=count() default=0 on pickup_datetime from min_t to max_t step 1d by cab_type
+| where cab_type == 'yellow'
+| extend (anomalies) = series_decompose_anomalies(numTrips, 1.5, -1, 'linefit')
+| render anomalychart with(anomalycolumns=anomalies, title='Taxi trips, anomalies');
+
+let min_t = datetime(2015-01-01);
+let max_t = datetime(2016-01-01);
+Trips
+| make-series numTrips=count() default=0 on pickup_datetime from min_t to max_t step 1d by cab_type
+| where cab_type == 'yellow'
+| extend (baseline, seasonal, trend, residual) = series_decompose(numTrips, -1, 'linefit')
+| render timechart with(title='Taxi trips, decomposition', ysplit=panels);
+
+let min_t = datetime(2015-01-01);
+let max_t = datetime(2016-01-01);
+let binSize = 1d;
+let future = 90d;
+Trips
+| where pickup_datetime >= min_t and pickup_datetime <= max_t
+| make-series numTrips=count() default=0 on pickup_datetime from min_t to max_t + future step binSize by cab_type
+| where cab_type == 'yellow'
+| extend forecastedTrips = series_decompose_forecast(numTrips, toint(future / binSize))
+| render timechart with(title='Taxi trips, forecast', ysplit=panels);
