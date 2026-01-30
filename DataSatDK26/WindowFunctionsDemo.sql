@@ -83,7 +83,7 @@ ORDER BY SOD.SalesOrderID, SOD.SalesOrderDetailID
 -- Named window definition:
 
 SELECT SalesOrderID, SalesOrderDetailID, ProductID, LineTotal,
-  COUNT(*) OVER(PARTITION BY SalesOrderID) As OrderLines,
+  COUNT(*)       OVER(PARTITION BY SalesOrderID) As OrderLines,
   SUM(LineTotal) OVER(PARTITION BY SalesOrderID) AS OrderTotal,
   MIN(LineTotal) OVER(PARTITION BY SalesOrderID) AS OrderMin,
   AVG(LineTotal) OVER(PARTITION BY SalesOrderID) AS OrderAvg,
@@ -392,6 +392,8 @@ WITH CTE AS (
 SELECT MIN(TheDate) AS IslandStart, MAX(TheDate) AS IslandEnd
 FROM CTE
 GROUP BY Diff;
+
+DROP TABLE IF EXISTS [Sales].[SomeDates] 
 
 
 SELECT OrderDate
